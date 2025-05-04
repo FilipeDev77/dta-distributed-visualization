@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Stock Price of DTAcoin</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+    
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; 
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+       
+        #dataChart {
+            width: 800px;  
+            height: 400px;  
+        }
+
+        h1 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Real-Time Stock Price of DTAcoin</h1>
+        <canvas id="dataChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('dataChart').getContext('2d');
+
+      
+        let chartData = {
+            labels: [],
+            datasets: [{
+                label: 'Price',
+                data: [],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false,
+            }]
+        };
+
+        const chartConfig = {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: false, 
+                maintainAspectRatio: true,  
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 20
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        suggestedMin: 0, 
+                        suggestedMax: 1500 
+                    }
+                }
+            }
+        };
+
+        const myChart = new Chart(ctx, chartConfig);
+
+
+        function updateChart(data) {
+            const timestamp = data.timestamp;
+            const price = data.price;
+
+         
+            chartData.labels.push(timestamp);
+            chartData.datasets[0].data.push(price);
+
+            
+            if (chartData.labels.length > 50) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+            }
+
+         
+            myChart.update();
+        }
+
+        async function fetchData() {
+            const symbol = 'AAPL';  
+            const response = await fetch(`/get_data?symbol=${symbol}`);
+            if (response.ok) {
+                const data = await response.json();
+                updateChart(data);  
+            } else {
+                console.log('Failed to fetch data:', response.status);
+            }
+        }
+
+        // Rafraîchir toutes les 2 secondes
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>
